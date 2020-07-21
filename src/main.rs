@@ -1,6 +1,5 @@
+#![allow(unused)]
 use lazy_static::lazy_static;
-use std::collections::HashMap;
-use std::error::Error;
 //use structopt::StructOpt;
 use rusqlite::{Connection, Result};
 use regex::Regex;
@@ -13,10 +12,6 @@ conn.execute("create table if not exists transactions (
 
 }*/
 
-struct ParseError {
-    details: String
-}
-
 #[derive(Debug)]
 struct Opt {
     symbol: String,
@@ -24,6 +19,16 @@ struct Opt {
     strike: f32,
     kind: String,
     price: f32,
+}
+
+impl Opt {
+    fn buy(&self, num_contracts: u8) {
+
+    }   
+    
+    fn sell(&self, num_contracts: u8) {
+        let total = self.price * num_contracts as f32 * 100.0;
+    }
 }
 
 fn create_option_struct(s: &str, p: f32) -> Opt {
@@ -35,7 +40,7 @@ fn create_option_struct(s: &str, p: f32) -> Opt {
                 (?P<strike>[\d\.]*$)").unwrap();
     }
     let parsed_option = RE.captures(s).unwrap();
-    let opt = Opt{
+    let opt = Opt {
         symbol: parsed_option.name("symbol").expect("Option parsing error").as_str().to_string(),
         expiration: parsed_option.name("expiration").expect("Option parsing error").as_str().to_string(),
         strike: parsed_option.name("strike").expect("Option parsing error").as_str().parse().unwrap(),
