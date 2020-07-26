@@ -13,7 +13,6 @@ pub fn create_table(conn: &mut Connection) {
                     num_contracts int not null, 
                     value real not null
                     strategy text)"#, NO_PARAMS);
-
 }
 
 // Use sqlite transaction to commit an option transaction. A simple transaction would be buying
@@ -23,11 +22,11 @@ pub fn commit_transaction(conn: &mut Connection, legs: Vec<Leg>, strategy: &str)
     let tx = conn.transaction()?;
     for leg in legs {
         tx.execute(r#"INSERT INTO transactions
-                        (symbol, expiration, strike, kind, price, value, strategy)
+                        (symbol, expiration, strike, kind, price, num_contracts, value, strategy)
                         VALUES (values)"#, 
                         params![leg.opt.symbol, leg.opt.expiration, leg.opt.strike,
                                 leg.opt.kind, leg.opt.price, leg.num_contracts,
-                                leg.value(),strategy])?;
+                                leg.value(), strategy])?;
     }
     tx.commit()
 }
