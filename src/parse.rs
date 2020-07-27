@@ -20,7 +20,7 @@ pub struct Leg {
 }
 
 #[derive(Debug)]
-pub struct Transaction {
+pub struct Trade {
     pub date: String,
     pub strategy: String,
     pub legs: Vec<Leg>
@@ -32,13 +32,13 @@ impl Leg {
             match self.buy_sell.as_str() {
                 "buy"  => -1.0,
                 "sell" => 1.0,
-                _ => panic!("Transaction type must be buy or sell.")
+                _ => unreachable!(r#"buy_sell can only be "buy" or "sell"."#)
         };
         buy_sell_mult * self.num_contracts as f64 * ((self.price * 100.0) - self.per_contract) - self.commission
     }
 }
 
-impl Transaction {
+impl Trade {
     pub fn value(&self) -> f64 {
         self.legs.iter().map(|l|{
             l.value()    

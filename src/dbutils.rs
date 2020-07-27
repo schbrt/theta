@@ -34,15 +34,15 @@ pub fn create_transaction_id_table(conn: &mut Connection) {
 // Use sqlite transaction to commit an option transaction. A simple transaction would be buying
 // or selling one or more contracts. Advanced option trades can be broken down into a series of buys
 // and sells.
-pub fn commit_transaction(conn: &mut Connection, legs: Vec<Leg>, date: &str, strategy: &str) -> Result<()> {
+pub fn commit_transaction(conn: &mut Connection, trade: Trade) -> Result<()> {
     let tx = conn.transaction()?;
     tx.execute(r#"INSERT INTO txids
-                    (strategy, date)
+                    (strategy, date, value)
                     VALUES (values)"#,
-                    params![strategy, date]); 
+                    params![trade.strategy, trade.date, trade.value()]); 
     // Get sqlite rowid for the overall stock transaction (multiple legs)
     let transaction_last_rowid = tx.last_insert_rowid();
-    for leg in legs {
+    for leg in trade.legs {
         tx.execute(r#"INSERT OR IGNORE INTO securities 
                         (symbol, expiration, strike, kind)
                         VALUES (values)"#,
