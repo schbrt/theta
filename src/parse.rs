@@ -1,22 +1,29 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 
-#[derive(Debug )]
+#[derive(Debug)]
 pub struct Opt {
     pub symbol: String,
     pub expiration: String,
     pub strike: f64,
     pub kind: String,
-    pub price: f64,
 }
 
+#[derive(Debug)]
 pub struct Leg {
     pub opt: Opt,
     pub num_contracts: i32,
-    pub purchase_date: String,
     pub buy_sell: String,
+    pub price: f64,
     commission: f64,
     per_contract: f64
+}
+
+#[derive(Debug)]
+pub struct Transaction {
+    pub date: String,
+    pub strategy: String,
+    pub legs: Vec<Leg>
 }
 
 impl Leg {
@@ -27,7 +34,15 @@ impl Leg {
                 "sell" => 1.0,
                 _ => panic!("Transaction type must be buy or sell.")
         };
-        buy_sell_mult * self.num_contracts as f64 * ((self.opt.price * 100.0) - self.per_contract) - self.commission
+        buy_sell_mult * self.num_contracts as f64 * ((self.price * 100.0) - self.per_contract) - self.commission
+    }
+}
+
+impl Transaction {
+    pub fn value(&self) -> f64 {
+        self.legs.iter().map(|l|{
+            l.value()    
+        }).sum()
     }
 }
 
@@ -59,7 +74,6 @@ pub fn create_opt(s: &str, price: f64, purchase_date: &str, buy_sell: &str) -> O
         strike: parsed_option.name("strike").expect("Option parsing error").as_str().parse().unwrap(),
         kind: parsed_option.name("type").expect("Option parsing error").as_str().to_string(),
         //purchase_date: String::from(purchase_date),
-        price,
         //buy_sell: String::from(buy_sell)
     };
     return opt;
