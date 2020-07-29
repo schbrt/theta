@@ -1,3 +1,6 @@
+use std::fmt;
+use std::str::FromStr;
+use std::string::ParseError;
 use lazy_static::lazy_static;
 use regex::Regex;
 
@@ -26,9 +29,28 @@ pub struct Trade {
     pub legs: Vec<Leg>
 }
 
-impl Opt {
-    // Creates a new Opt struct from an option string of the form AMD200701C53
-    pub fn new(opt_str: &str) -> Self {
+pub struct OptParseErr {
+    opt_str: String
+}
+
+impl fmt::Display for OptParseErr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Could not parse opt string.")
+    }
+}
+
+impl fmt::Debug for OptParseErr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "")
+    }
+}
+    
+//TODO: Fix error handling
+impl FromStr for Opt {
+    //type Err = regex::Error;
+    type Err = OptParseErr;
+    
+    fn from_str(opt_str: &str) -> Result<Opt, Self::Err> {
         lazy_static! {
             static ref RE: Regex = Regex::new(r"(?x)
                     (?P<symbol>^[A-Z]{1,6})
@@ -37,16 +59,39 @@ impl Opt {
                     (?P<strike>[\d\.]*$)").unwrap();
         }
         let parsed_option = RE.captures(opt_str).unwrap();
-        return Opt {
+        Ok(Opt {
             symbol: parsed_option.name("symbol").expect("Option parsing error").as_str().to_string(),
             expiration: convert_expir_date(&parsed_option.name("expiration").expect("Option parsing error").as_str().to_string()),
             strike: parsed_option.name("strike").expect("Option parsing error").as_str().parse().unwrap(),
-            kind: parsed_option.name("type").expect("Option parsing error").as_str().to_string(),
-        };
+            kind: parsed_option.name("type").expect("Option parsing error").as_str().to_string()
+            })
+        /*
+        match parsed_option.len() {
+            5 => Ok(Opt {
+                    symbol: parsed_option.name("symbol").expect("Option parsing error").as_str().to_string(),
+                    expiration: convert_expir_date(&parsed_option.name("expiration").expect("Option parsing error").as_str().to_string()),
+                    strike: parsed_option.name("strike").expect("Option parsing error").as_str().parse().unwrap(),
+                    kind: parsed_option.name("type").expect("Option parsing error").as_str().to_string()
+                }),
+            _ => Err(OptParseErr { opt_str: String::from(opt_str) })
+            _
+        }*/
+    
     }
 }
 
 impl Leg {
+    pub fn new(o: Opt, n: i32, p: f64, bs: String, c: f64, pc: f64) -> Self {
+        return Leg {
+            opt: o,
+            num_contracts: n,
+            price: p,
+            buy_sell: bs,
+            commission: c,
+            per_contract: pc
+        }
+    }
+
     pub fn value(&self) -> f64 {
         let buy_sell_mult = 
             match self.buy_sell.as_str() {
