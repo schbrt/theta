@@ -7,14 +7,15 @@ use rusqlite::{Connection, Result, NO_PARAMS};
 use parse::*;
 
 fn main() -> Result<()> {
-    let mut conn = Connection::open("theta.db")?;
+    let conn = Connection::open("theta.db")?;
     let opts = vec![("AMD200626C53", 0.70), ("AMAT200619C55", 1.00), ("MSFT200529C182.5", 2.40)];
+    dbutils::create_tables(&conn);
     let mut txs  = Vec::new();
     for opt in opts {
         let o = Opt::from_str(opt.0);
         txs.push(o);
     }
-    println!("{:#?}", txs);
+   // println!("{:#?}", txs);
     Ok(())
 }
 

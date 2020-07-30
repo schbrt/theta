@@ -2,33 +2,39 @@
 use crate::parse::*;
 use rusqlite::{Connection, Result, NO_PARAMS, params};
 
-pub fn create_security_table(conn: &mut Connection) {
+fn create_security_table(conn: &Connection) {
     conn.execute(r#"CREATE TABLE IF NOT EXISTS securities (
-                    id INTEGER PRIMARY KEY,
-                    symbol TEXT NOT NULL,
-                    expiration TEXT NOT NULL,
-                    strike REAL NOT NULL,
-                    kind TEXT NOT NULL,
-                    UNIQUE(symbol, expiration, strike, kind))"#, NO_PARAMS);
+                id INTEGER PRIMARY KEY,
+                symbol TEXT NOT NULL,
+                expiration TEXT NOT NULL,
+                strike REAL NOT NULL,
+                kind TEXT NOT NULL,
+                UNIQUE(symbol, expiration, strike, kind))"#, NO_PARAMS);
 }
 
-pub fn create_transaction_table(conn: &mut Connection) {
+fn create_transaction_table(conn: &Connection) {
     conn.execute(r#"CREATE TABLE IF NOT EXISTS transactions (
-                    legid INTEGER PRIMARY KEY AUTOINCREMENT,
-                    securityid INT,
-                    txid INT,
-                    num_contracts INT NOT NULL, 
-                    value REAL NOT NULL,
-                    price REAL NOT NULL
-                    FOREIGN KEY(txid) REFERENCES txids(txid)
-                    FOREIGN KEY(securityid) REFERENCES securities(id))"#, NO_PARAMS);
+                legid INTEGER PRIMARY KEY AUTOINCREMENT,
+                securityid INT,
+                txid INT,
+                num_contracts INT NOT NULL, 
+                value REAL NOT NULL,
+                price REAL NOT NULL,
+                FOREIGN KEY(txid) REFERENCES txids(txid)
+                FOREIGN KEY(securityid) REFERENCES securities(id))"#, NO_PARAMS);
 }
 
-pub fn create_transaction_id_table(conn: &mut Connection) {
+fn create_transaction_id_table(conn: &Connection) {
    conn.execute(r#"CREATE TABLE IF NOT EXISTS txids (
-                    txid INTEGER PRIMARY KEY AUTOINCREMENT,
-                    strategy TEXT,
-                    date TEXT)"#, NO_PARAMS) ;
+                txid INTEGER PRIMARY KEY AUTOINCREMENT,
+                strategy TEXT,
+                date TEXT)"#, NO_PARAMS);
+}
+
+pub fn create_tables(conn: &Connection) {
+    create_transaction_table(conn);
+    create_security_table(conn);
+    create_transaction_id_table(conn);
 }
 
 // Use sqlite transaction to commit an option transaction. A simple transaction would be buying
