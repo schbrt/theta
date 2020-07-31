@@ -8,14 +8,21 @@ use parse::*;
 
 fn main() -> Result<()> {
     let conn = Connection::open("theta.db")?;
-    let opts = vec![("AMD200626C53", 0.70), ("AMAT200619C55", 1.00), ("MSFT200529C182.5", 2.40)];
+    let opts = vec![("AMD200626C53", 2, 0.7, "sell"), ("AMAT200619C53", 2, 0.01, "buy")];
+    let mut legs: Vec<Leg> = Vec::new();
     dbutils::create_tables(&conn);
-    let mut txs  = Vec::new();
     for opt in opts {
-        let o = Opt::from_str(opt.0);
-        txs.push(o);
+        legs.push(
+            Leg::new(Opt::from_str(opt.0).unwrap(),  opt.1,  opt.2,
+                     String::from(opt.3),  0.0,  0.65)
+        );
     }
-   // println!("{:#?}", txs);
+    let trade = Trade {
+                date: String::from("2020-06-19"),
+                strategy: String::from("Roll"),
+                legs };
+    println!("{:#?}", trade);
+    println!("{}", trade.value());
     Ok(())
 }
 

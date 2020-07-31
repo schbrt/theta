@@ -40,7 +40,7 @@ pub fn create_tables(conn: &Connection) {
 // Use sqlite transaction to commit an option transaction. A simple transaction would be buying
 // or selling one or more contracts. Advanced option trades can be broken down into a series of buys
 // and sells.
-pub fn commit_transaction(conn: &mut Connection, trade: Trade) -> Result<()> {
+pub fn commit_trade(conn: &mut Connection, trade: Trade) -> Result<()> {
     let tx = conn.transaction()?;
     tx.execute(r#"INSERT INTO txids
                     (strategy, date, value)
