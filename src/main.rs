@@ -7,22 +7,24 @@ use rusqlite::{Connection, Result, NO_PARAMS};
 use parse::*;
 
 fn main() -> Result<()> {
-    let conn = Connection::open("theta.db")?;
-    let opts = vec![("AMD200626C53", 2, 0.7, "sell"), ("AMAT200619C53", 2, 0.01, "buy")];
-    let mut legs: Vec<Leg> = Vec::new();
+    let mut conn = Connection::open("theta.db")?;
+    //let mut conn2 = Connection::open("theta.db")?;
+    let trades = vec![("PRPL200831C30", 1, 2.00, "sell"), ("MU200814C50", 2, 0.70, "sell")];
     dbutils::create_tables(&conn);
-    for opt in opts {
+    for t in trades {
+        let mut legs: Vec<Leg> = Vec::new();
         legs.push(
-            Leg::new(Opt::from_str(opt.0).unwrap(),  opt.1,  opt.2,
-                     String::from(opt.3),  0.0,  0.65)
+            Leg::new(Opt::from_str(t.0).unwrap(),  t.1,  t.2,
+                     String::from(t.3),  0.0,  0.65)
         );
+        let tr = Trade {
+            date: String::from("2020-08-07"),
+            strategy: String::from("Covered Call"),
+            legs };
+
+        dbutils::commit_trade(&mut conn, tr);
     }
-    let trade = Trade {
-                date: String::from("2020-06-19"),
-                strategy: String::from("Roll"),
-                legs };
-    println!("{:#?}", trade);
-    println!("{}", trade.value());
+    //println!("{:#?}", trade);
     Ok(())
 }
 

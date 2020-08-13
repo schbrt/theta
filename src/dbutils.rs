@@ -43,24 +43,26 @@ pub fn create_tables(conn: &Connection) {
 pub fn commit_trade(conn: &mut Connection, trade: Trade) -> Result<()> {
     let tx = conn.transaction()?;
     tx.execute(r#"INSERT INTO txids
-                    (strategy, date, value)
-                    VALUES (values)"#,
-                    params![trade.strategy, trade.date, trade.value()]); 
+                    (strategy, date)
+                    VALUES (?1, ?2)"#,
+                    params![trade.strategy, trade.date])?; 
     // Get sqlite rowid for the overall stock transaction (multiple legs)
     let transaction_last_rowid = tx.last_insert_rowid();
     for leg in trade.legs {
+        println!("{:#?}", leg);
         tx.execute(r#"INSERT OR IGNORE INTO securities 
                         (symbol, expiration, strike, kind)
-                        VALUES (values)"#,
+                        VALUES (?1, ?2, ?3, ?4)"#,
                         params![leg.opt.symbol, leg.opt.expiration, leg.opt.strike,
                                 leg.opt.kind])?;
         // Get sqlite rowid for the security involved in current leg
         let last_rowid = tx.last_insert_rowid();
         tx.execute(r#"INSERT INTO transactions
                         (securityid, txid, num_contracts, value, price)
-                        VALUES (values)"#, 
+                        VALUES (?1, ?2, ?3, ?4, ?5)"#, 
                         params![last_rowid, transaction_last_rowid, leg.num_contracts, 
                         leg.value(), leg.price])?;
     }
-    tx.commit()
+    tx.commit();
+    Ok(())
 }
